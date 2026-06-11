@@ -3,6 +3,15 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  if (location.hash) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  window.scrollTo(0, 0);
+</script>
 <meta name="theme-color" content="#111111" />
 <title>Catch Up — It All Starts With a Conversation</title>
 <meta name="description" content="Catch Up is a bold, honest, reliable marketing agency. Social media, strategy, AI marketing and campaigns — built around a real conversation." />
@@ -327,7 +336,7 @@
     grid-area: 1 / 1;
     display: inline-block;
     white-space: nowrap;
-    will-change: opacity, transform, filter;
+    will-change: opacity, transform;
   }
   .word-cycle-wrap .word-layer:last-child { opacity: 0; }
 
@@ -473,10 +482,191 @@
     pointer-events: none;
     white-space: nowrap;
   }
+
+  /* Loading screen */
+  #loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 35%, rgba(232,87,10,0.35), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 65% 70%, rgba(245,166,35,0.18), transparent 70%),
+      #111111;
+    transition: opacity 0.7s ease;
+  }
+  #loading-screen.loader-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .loader-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    animation: loader-spin 5s linear infinite;
+  }
+  @keyframes loader-spin {
+    0% {
+      transform: rotate(90deg);
+      box-shadow:
+        0 6px 12px 0 #F5A623 inset,
+        0 12px 18px 0 #E8570A inset,
+        0 36px 36px 0 #5C1A0A inset,
+        0 0 3px 1.2px rgba(245, 166, 35, 0.35),
+        0 0 8px 2px rgba(232, 87, 10, 0.25);
+    }
+    50% {
+      transform: rotate(270deg);
+      box-shadow:
+        0 6px 12px 0 #FBC56B inset,
+        0 12px 6px 0 #E8570A inset,
+        0 24px 36px 0 #C2410C inset,
+        0 0 3px 1.2px rgba(245, 166, 35, 0.35),
+        0 0 8px 2px rgba(232, 87, 10, 0.25);
+    }
+    100% {
+      transform: rotate(450deg);
+      box-shadow:
+        0 6px 12px 0 #F5A623 inset,
+        0 12px 18px 0 #E8570A inset,
+        0 36px 36px 0 #5C1A0A inset,
+        0 0 3px 1.2px rgba(245, 166, 35, 0.35),
+        0 0 8px 2px rgba(232, 87, 10, 0.25);
+    }
+  }
+
+  .loader-status {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    transition: opacity 0.5s ease;
+  }
+  #loader-generating.loader-fade-out { opacity: 0; }
+
+  .loader-letter {
+    display: inline-block;
+    color: #F5A623;
+    opacity: 0.35;
+    animation: loader-letter-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes loader-letter-pulse {
+    0%, 100% { opacity: 0.35; transform: translateY(0) scale(1); }
+    20% { opacity: 1; color: #E8570A; transform: scale(1.25); }
+    40% { opacity: 0.7; transform: translateY(0) scale(1); }
+  }
+
+  #loader-welcome { opacity: 0; }
+  #loader-welcome.loader-show { opacity: 1; }
+  .loader-welcome-letter {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  #loader-welcome.loader-show .loader-welcome-letter {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .loader-welcome-line {
+    position: absolute;
+    bottom: -0.5em;
+    left: 50%;
+    width: 2.5rem;
+    height: 2px;
+    background: #E8570A;
+    transform: translateX(-50%) scaleX(0);
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
+  }
+  #loader-welcome.loader-show .loader-welcome-line {
+    transform: translateX(-50%) scaleX(1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #loading-screen { display: none !important; }
+  }
 </style>
 </head>
 
 <body class="bg-white text-cu-ink overflow-x-hidden">
+
+<!-- ============ LOADING SCREEN ============ -->
+<div id="loading-screen" class="grain" aria-hidden="true">
+  <div class="relative flex flex-col items-center gap-7 sm:gap-8">
+    <div class="relative w-24 h-24 sm:w-32 sm:h-32">
+      <div class="loader-ring"></div>
+    </div>
+    <div class="relative h-8 sm:h-10 w-48 sm:w-60 flex items-center justify-center">
+      <p id="loader-generating" class="loader-status font-body text-[11px] sm:text-xs uppercase tracking-label">
+        <span class="loader-letter" style="animation-delay:0.00s">G</span>
+        <span class="loader-letter" style="animation-delay:0.08s">e</span>
+        <span class="loader-letter" style="animation-delay:0.16s">n</span>
+        <span class="loader-letter" style="animation-delay:0.24s">e</span>
+        <span class="loader-letter" style="animation-delay:0.32s">r</span>
+        <span class="loader-letter" style="animation-delay:0.40s">a</span>
+        <span class="loader-letter" style="animation-delay:0.48s">t</span>
+        <span class="loader-letter" style="animation-delay:0.56s">i</span>
+        <span class="loader-letter" style="animation-delay:0.64s">n</span>
+        <span class="loader-letter" style="animation-delay:0.72s">g</span>
+      </p>
+      <p id="loader-welcome" class="loader-status font-display uppercase text-2xl sm:text-3xl text-white tracking-tightest2">
+        <span class="loader-welcome-letter" style="transition-delay:0.00s">W</span>
+        <span class="loader-welcome-letter" style="transition-delay:0.04s">e</span>
+        <span class="loader-welcome-letter" style="transition-delay:0.08s">l</span>
+        <span class="loader-welcome-letter" style="transition-delay:0.12s">c</span>
+        <span class="loader-welcome-letter" style="transition-delay:0.16s">o</span>
+        <span class="loader-welcome-letter" style="transition-delay:0.20s">m</span>
+        <span class="loader-welcome-letter" style="transition-delay:0.24s">e</span>
+        <span class="loader-welcome-line" aria-hidden="true"></span>
+      </p>
+    </div>
+  </div>
+</div>
+<noscript><style>#loading-screen { display: none !important; }</style></noscript>
+<script>
+  (() => {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (!loadingScreen) return;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      loadingScreen.remove();
+      window.dispatchEvent(new Event('cu:loader-done'));
+      return;
+    }
+
+    document.body.classList.add('overflow-hidden');
+
+    // Pin the page to the hero (top) for the full duration of the loading
+    // screen, regardless of what tries to scroll/jump it in the meantime.
+    const pinToTop = () => window.scrollTo(0, 0);
+    window.addEventListener('scroll', pinToTop, { passive: true });
+    const pinInterval = setInterval(pinToTop, 50);
+
+    const generating = document.getElementById('loader-generating');
+    const welcome = document.getElementById('loader-welcome');
+
+    setTimeout(() => generating.classList.add('loader-fade-out'), 3000);
+    setTimeout(() => welcome.classList.add('loader-show'), 3250);
+    setTimeout(() => {
+      window.removeEventListener('scroll', pinToTop);
+      clearInterval(pinInterval);
+      loadingScreen.classList.add('loader-hidden');
+      document.body.classList.remove('overflow-hidden');
+      window.dispatchEvent(new Event('cu:loader-done'));
+    }, 4900);
+
+    loadingScreen.addEventListener('transitionend', (e) => {
+      if (e.propertyName === 'opacity' && loadingScreen.classList.contains('loader-hidden')) {
+        loadingScreen.remove();
+      }
+    });
+  })();
+</script>
 
 <!-- Skip link -->
 <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-cu-orange focus:text-white focus:px-4 focus:py-2 focus:rounded">Skip to content</a>
@@ -1053,6 +1243,12 @@
   wordLayers[1].textContent = cycleWords[(cycleIndex + 1) % cycleWords.length];
 
   let cycleStart = performance.now();
+  // If a loading screen covers the page, restart the cycle clock the
+  // moment it's revealed so the word is always seen mid-hold, never
+  // mid-transition.
+  window.addEventListener('cu:loader-done', () => {
+    cycleStart = performance.now();
+  }, { once: true });
   const renderWordCycle = (now) => {
     let elapsed = now - cycleStart;
     if (elapsed >= PERIOD_MS) {
@@ -1068,18 +1264,14 @@
 
     if (elapsed < HOLD_MS) {
       outEl.style.opacity = '1';
-      outEl.style.filter = 'blur(0px)';
       outEl.style.transform = 'translateY(0)';
       inEl.style.opacity = '0';
-      inEl.style.filter = 'blur(6px)';
       inEl.style.transform = `translateY(${SLIDE_PX}px)`;
     } else {
       const e = easeOutCubic(Math.min(1, (elapsed - HOLD_MS) / TRANSITION_MS));
       outEl.style.opacity = String(1 - e);
-      outEl.style.filter = `blur(${6 * e}px)`;
       outEl.style.transform = `translateY(${-SLIDE_PX * e}px)`;
       inEl.style.opacity = String(e);
-      inEl.style.filter = `blur(${6 * (1 - e)}px)`;
       inEl.style.transform = `translateY(${SLIDE_PX * (1 - e)}px)`;
     }
 
