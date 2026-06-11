@@ -320,15 +320,16 @@
   @keyframes heroFadeIn { to { opacity: 1; transform: translateY(0); } }
 
   /* Hero word cycle */
-  .word-cycle {
+  .word-cycle-wrap {
+    display: inline-grid;
+  }
+  .word-cycle-wrap .word-layer {
+    grid-area: 1 / 1;
     display: inline-block;
+    white-space: nowrap;
+    will-change: opacity, transform, filter;
   }
-  .word-cycle.is-cycling { animation: wordCycle 0.85s cubic-bezier(0.22, 1, 0.36, 1); }
-  @keyframes wordCycle {
-    0% { opacity: 1; filter: blur(0); }
-    41% { opacity: 0; filter: blur(6px); }
-    100% { opacity: 1; filter: blur(0); }
-  }
+  .word-cycle-wrap .word-layer:last-child { opacity: 0; }
 
   /* Outline text */
   .text-outline {
@@ -542,7 +543,10 @@
       <h1 class="hero-fade font-display uppercase leading-[1.02] text-5xl sm:text-7xl lg:text-[5.5rem] tracking-tightest2" style="animation-delay:0.15s">
         <span class="block font-body normal-case italic font-medium text-outline text-4xl sm:text-6xl lg:text-7xl mb-1 sm:mb-2 tracking-tight">We bring</span>
         <span class="block text-white relative">
-          <span id="cycle-word" class="word-cycle text-cu-orange" aria-live="off">strategy</span>
+          <span id="cycle-word" class="word-cycle-wrap text-cu-orange" aria-live="off">
+            <span class="word-layer">strategy</span>
+            <span class="word-layer" aria-hidden="true"></span>
+          </span>
           <span class="inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-cu-amber ml-3 -translate-y-3 sm:-translate-y-4 pulse-dot align-top"></span>
         </span>
         <span class="block text-white">to your brand.</span>
@@ -1036,17 +1040,52 @@
 
   // Hero word cycle
   const cycleWords = ['strategy', 'content', 'campaigns', 'results'];
-  const cycleEl = document.getElementById('cycle-word');
+  const wordWrap = document.getElementById('cycle-word');
+  const wordLayers = wordWrap.querySelectorAll('.word-layer');
+  const HOLD_MS = 1800;
+  const TRANSITION_MS = 1500;
+  const PERIOD_MS = HOLD_MS + TRANSITION_MS;
+  const SLIDE_PX = parseFloat(getComputedStyle(wordWrap).fontSize) * 0.22;
+  const easeOutCubic = (p) => 1 - Math.pow(1 - p, 3);
+
+  let activeLayer = 0;
   let cycleIndex = 0;
-  setInterval(() => {
-    cycleEl.classList.remove('is-cycling');
-    void cycleEl.offsetWidth;
-    cycleEl.classList.add('is-cycling');
-    setTimeout(() => {
+  wordLayers[1].textContent = cycleWords[(cycleIndex + 1) % cycleWords.length];
+
+  let cycleStart = performance.now();
+  const renderWordCycle = (now) => {
+    let elapsed = now - cycleStart;
+    if (elapsed >= PERIOD_MS) {
+      cycleStart += PERIOD_MS;
+      elapsed -= PERIOD_MS;
+      activeLayer = 1 - activeLayer;
       cycleIndex = (cycleIndex + 1) % cycleWords.length;
-      cycleEl.textContent = cycleWords[cycleIndex];
-    }, 350);
-  }, 2800);
+      wordLayers[1 - activeLayer].textContent = cycleWords[(cycleIndex + 1) % cycleWords.length];
+    }
+
+    const outEl = wordLayers[activeLayer];
+    const inEl = wordLayers[1 - activeLayer];
+
+    if (elapsed < HOLD_MS) {
+      outEl.style.opacity = '1';
+      outEl.style.filter = 'blur(0px)';
+      outEl.style.transform = 'translateY(0)';
+      inEl.style.opacity = '0';
+      inEl.style.filter = 'blur(6px)';
+      inEl.style.transform = `translateY(${SLIDE_PX}px)`;
+    } else {
+      const e = easeOutCubic(Math.min(1, (elapsed - HOLD_MS) / TRANSITION_MS));
+      outEl.style.opacity = String(1 - e);
+      outEl.style.filter = `blur(${6 * e}px)`;
+      outEl.style.transform = `translateY(${-SLIDE_PX * e}px)`;
+      inEl.style.opacity = String(e);
+      inEl.style.filter = `blur(${6 * (1 - e)}px)`;
+      inEl.style.transform = `translateY(${SLIDE_PX * (1 - e)}px)`;
+    }
+
+    requestAnimationFrame(renderWordCycle);
+  };
+  requestAnimationFrame(renderWordCycle);
 
   // Show more services
   const showMoreBtn = document.getElementById('show-more-services');
