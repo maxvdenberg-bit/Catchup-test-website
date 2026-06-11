@@ -322,13 +322,18 @@
   /* Hero word cycle */
   .word-cycle {
     display: inline-block;
-    transition: opacity 0.35s ease, transform 0.35s ease, filter 0.35s ease;
+    opacity: 1;
+    filter: blur(0);
   }
-  .word-cycle.is-out { opacity: 0; transform: translateY(-0.3em); filter: blur(6px); }
+  .word-cycle.is-out { animation: wordOut 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
   .word-cycle.is-in { animation: wordIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+  @keyframes wordOut {
+    from { opacity: 1; filter: blur(0); }
+    to { opacity: 0; filter: blur(6px); }
+  }
   @keyframes wordIn {
-    from { opacity: 0; transform: translateY(0.3em); filter: blur(6px); }
-    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    from { opacity: 0; filter: blur(6px); }
+    to { opacity: 1; filter: blur(0); }
   }
 
   /* Outline text */
@@ -1045,6 +1050,7 @@
       cycleIndex = (cycleIndex + 1) % cycleWords.length;
       cycleEl.textContent = cycleWords[cycleIndex];
       cycleEl.classList.remove('is-out');
+      void cycleEl.offsetWidth;
       cycleEl.classList.add('is-in');
       setTimeout(() => cycleEl.classList.remove('is-in'), 500);
     }, 350);
